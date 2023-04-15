@@ -7,7 +7,7 @@ from pathlib import Path
 from selenium import webdriver
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 
@@ -40,6 +40,7 @@ class DomainChecker:
 
     Note: The `login` method should be overridden if the website asks for some sort of authentication.
     """
+
     def __init__(self, url: str, output_dir: Union[str, Path] = None, timing: Union[float, int] = 1.5) -> None:
         self.url = url
         if output_dir is None:
@@ -58,10 +59,10 @@ class DomainChecker:
         """Checks output dir: if output{n}.json file is present finds the next free n"""
         output_index = 0
         pattern = re.compile(r"(output)(\d+)\.json")
-        for file in self.output_dir.glob(".json"):
+        for file in self.output_dir.glob("*.json"):
             match = pattern.match(file.name)
             if match:
-                n = int(match.group(2))
+                n = int(match.group(2)) + 1
                 output_index = max(output_index, n)
 
         return output_index
@@ -87,22 +88,21 @@ class DomainChecker:
     def check_if_free(self, check_field, domain: str, free_text: str = None, taken_text: str = None) -> bool:
         """Input domain into field and wait if taken or free tag appeared on the page"""
         check_field.send_keys(domain)
-        time.sleep(1)
+        time.sleep(self.timing)
 
-        if free_text:
+        wait = WebDriverWait(self.driver, self.timing)
+        if free_text and not taken_text:
             try:
-                WebDriverWait(self.driver, self.timing).until(
-                    expected_conditions.text_to_be_present_in_element(
-                        (By.XPATH, f"//*[contains(text(), '{free_text}')]"), free_text))
+                wait.until(
+                    EC.text_to_be_present_in_element((By.XPATH, f"//*[contains(text(), '{free_text}')]"), free_text))
                 return True
             except TimeoutException:
                 return False
 
-        elif taken_text:
+        elif taken_text and not free_text:
             try:
-                WebDriverWait(self.driver, self.timing).until(
-                    expected_conditions.text_to_be_present_in_element(
-                        (By.XPATH, f"//*[contains(text(), '{taken_text}')]"), taken_text))
+                wait.until(
+                    EC.text_to_be_present_in_element((By.XPATH, f"//*[contains(text(), '{taken_text}')]"), taken_text))
                 return False
             except TimeoutException:
                 return True
@@ -121,6 +121,7 @@ class DomainChecker:
                 else:
                     self.taken_list.append(domain)
                 check_field.clear()
+            self.dump_output()
         except Exception as e:
             self.dump_output()
             print('Output saved')
