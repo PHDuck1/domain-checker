@@ -41,7 +41,7 @@ class DomainChecker:
     Note: The `login` method should be overridden if the website asks for some sort of authentication.
     """
 
-    def __init__(self, url: str, output_dir: Union[str, Path] = None, timing: Union[float, int] = 1.5) -> None:
+    def __init__(self, url: str, output_dir: Union[str, Path] = None, timing: Union[float, int] = 1.5, driver=webdriver.Chrome()) -> None:
         self.url = url
         if output_dir is None:
             # Use the directory where the calling script is located
