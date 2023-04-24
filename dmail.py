@@ -17,13 +17,22 @@ class DmailChecker(DomainChecker):
         buttons = self.driver.find_elements(By.TAG_NAME, "button")
         buttons[n].click()
 
+    def website_prepare(self):
+        # open dmail website
+        self.driver.get(URL)
+        sleep(3)
+
+        metamask_connect = self.driver.find_element(By.CLASS_NAME, "metamask")
+        metamask_connect.click()
+        sleep(5)
+
     def login(self) -> None:
         opt = Options()
         opt.add_extension(EXTENSION_PATH)
 
         self.driver = webdriver.Chrome(options=opt)
 
-        sleep(2)
+        sleep(5)
 
         # switch the focus to the last tab
         window_handles = self.driver.window_handles
@@ -86,13 +95,8 @@ class DmailChecker(DomainChecker):
         sleep(1)
         self.click_button(12)
 
-        # open dmail website
-        self.driver.get(URL)
-        sleep(3)
-
-        links = self.driver.find_elements(By.TAG_NAME, "a")
-        links[0].click()
-        sleep(5)
+        # Open website info
+        self.website_prepare()
 
         # switch the focus to the last tab
         window_handles = self.driver.window_handles
